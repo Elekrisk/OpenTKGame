@@ -46,7 +46,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Components\Camera.cs" />
     <Compile Include="Components\MainWindow.cs" />
+    <Compile Include="GameStuff\Floor.cs" />
+    <Compile Include="GameStuff\Map.cs" />
+    <Compile Include="GameStuff\Square.cs" />
+    <Compile Include="Components\RenderObject.cs" />
+    <Compile Include="Components\Vertex.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
