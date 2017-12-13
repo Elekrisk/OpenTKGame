@@ -12,6 +12,7 @@ namespace OpenTKGame
     {
         static void Main(string[] args)
         {
+            // Kör 'spelet' med en frekvens på 60 bilder per sekund
             new MainWindow().Run(60);
         }
     }

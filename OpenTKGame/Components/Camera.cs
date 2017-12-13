@@ -7,7 +7,7 @@ using OpenTK;
 
 namespace OpenTKGame.Components
 {
-    class Camera
+    class Camera    // Klass som innehåller information om hur spelkartan ska renderas
     {
         public Vector2 Size { get; set; }
         public Vector2 Offset { get; set; }

@@ -9,7 +9,7 @@ using OpenTK.Graphics.OpenGL4;
 
 namespace OpenTKGame.Components
 {
-    class RenderObject : IDisposable
+    class RenderObject : IDisposable    // Denna klass är helt kopierad från en tutorial och jag har knappt någon aning om hur den fungerar.
     {
         private bool initialized;
         private readonly int vertexArray;

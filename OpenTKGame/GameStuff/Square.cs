@@ -6,37 +6,47 @@ using System.Threading.Tasks;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL4;
+using OpenTKGame.Components;
 
-namespace OpenTKGame.Components
+namespace OpenTKGame.GameStuff
 {
     class Square
     {
-        public RenderObject renderObject = new RenderObject(new Vertex[6]
-        {
-            new Vertex(new Vector4(-1, -1, 0, 1), Color4.AliceBlue),
-            new Vertex(new Vector4(1, -1, 0, 1), Color4.AliceBlue),
-            new Vertex(new Vector4(-1, 1, 0, 1), Color4.AliceBlue),
-            new Vertex(new Vector4(1, 1, 0, 1), Color4.Red),
-            new Vertex(new Vector4(1, -1, 0, 1), Color4.Red),
-            new Vertex(new Vector4(-1, 1, 0, 1), Color4.Red)
-        });
+        private RenderObject renderObject = new RenderObject(new Vertex[0]);
         public Vector3 Position { get; set; }
+        private Color4 col1;
+        private Color4 col2;
 
         public Square(Vector3 position)
         {
             Position = position;
+            col1 = Color4.AliceBlue;
+            col2 = Color4.Red;
+        }
+        public Square(Vector3 position, Color4 color)
+        {
+            Position = position;
+            col1 = color;
+            col2 = color;
+        }
+        public Square(Vector3 position, Color4 color1, Color4 color2)
+        {
+            Position = position;
+            col1 = color1;
+            col2 = color2;
         }
 
         public void Render(Camera cam)
         {
+            renderObject.Dispose();
             Vertex[] newVertices = new Vertex[6]
             {
-                new Vertex(new Vector4(WorldToScreen(cam, new Vector3(-1, -1, 0)), 1), Color4.AliceBlue),
-                new Vertex(new Vector4(WorldToScreen(cam, new Vector3(1, -1, 0)), 1), Color4.AliceBlue),
-                new Vertex(new Vector4(WorldToScreen(cam, new Vector3(-1, 1, 0)), 1), Color4.AliceBlue),
-                new Vertex(new Vector4(WorldToScreen(cam, new Vector3(1, 1, 0)), 1), Color4.Red),
-                new Vertex(new Vector4(WorldToScreen(cam, new Vector3(1, -1, 0)), 1), Color4.Red),
-                new Vertex(new Vector4(WorldToScreen(cam, new Vector3(-1, 1, 0)), 1), Color4.Red)
+                new Vertex(new Vector4(WorldToScreen(cam, new Vector3(Position.X - 0.5f, Position.Y - 0.5f, 0)), 1), col1),
+                new Vertex(new Vector4(WorldToScreen(cam, new Vector3(Position.X + 0.5f, Position.Y - 0.5f, 0)), 1), col1),
+                new Vertex(new Vector4(WorldToScreen(cam, new Vector3(Position.X - 0.5f, Position.Y + 0.5f, 0)), 1), col1),
+                new Vertex(new Vector4(WorldToScreen(cam, new Vector3(Position.X + 0.5f, Position.Y + 0.5f, 0)), 1), col2),
+                new Vertex(new Vector4(WorldToScreen(cam, new Vector3(Position.X + 0.5f, Position.Y - 0.5f, 0)), 1), col2),
+                new Vertex(new Vector4(WorldToScreen(cam, new Vector3(Position.X - 0.5f, Position.Y + 0.5f, 0)), 1), col2)
             };
             renderObject = new RenderObject(newVertices);
 
@@ -61,6 +71,10 @@ namespace OpenTKGame.Components
                 positions[i] = WorldToScreen(cam, pos[i]);
             }
             return positions;
+        }
+        public void Dispose()
+        {
+            renderObject.Dispose();
         }
     }
 }

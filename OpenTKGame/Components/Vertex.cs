@@ -8,9 +8,9 @@ using OpenTK.Graphics;
 
 namespace OpenTKGame.Components
 {
-    public struct Vertex
+    public struct Vertex    // Denna klass/struct är helt kopierad från en tutorial
     {
-        public const int Size = (4 + 4) * 4;
+        public const int Size = (4 + 4) * 4;    // Storleken på vertexen, konstant 32 bytes
 
         private readonly Vector4 position;
         private readonly Color4 color;
