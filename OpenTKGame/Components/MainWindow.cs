@@ -1,6 +1,8 @@
 ﻿using OpenTK.Input;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.IO;
 using System.Text;
@@ -16,12 +18,18 @@ namespace OpenTKGame.Components
     class MainWindow : GameWindow
     {
         private int program;    // Det OpenGL-program som används vid rendering
-        private List<Square> toRender = new List<Square>(); // En lista med Square-klasser, vilket är det alla saker på själva spelkartan ärver
+        private List<RenderObject> toRender = new List<RenderObject>(); // En lista med Square-klasser, vilket är det alla saker på själva spelkartan ärver
         private Camera camera;  // En klass med information om hur spelkartan ska renderas
         bool pressedMinus = false;  // Ifall användaren tryckte på minus-knappen förra bilden
         bool pressedPlus = false;   // Ifall användaren tryckte på plus-knappen förra bilden
 
-        
+        private Bitmap floorTile;
+        private Bitmap wallTile;
+
+        private int mapTexture;
+
+        private Map map;
+
         // Konstruktör, kallar basklassen konstruktor vilken gör en massa saker.
         public MainWindow() : base(1280, 720, GraphicsMode.Default, "Example Window", GameWindowFlags.Default, DisplayDevice.Default, 4, 5, GraphicsContextFlags.ForwardCompatible)
         {
@@ -38,23 +46,74 @@ namespace OpenTKGame.Components
         // Körs en gång då fönstret har laddats
         protected override void OnLoad(EventArgs e)
         {
+            floorTile = OpenTKGame.Properties.Resources.FloorTile;
+            wallTile = OpenTKGame.Properties.Resources.WallTile;
+
+            GL.Enable(EnableCap.Texture2D);
+
             camera = new Camera     // Skapar kameran med en default zoom på 4
             {
                 Size = new Vector2(Width, Height),
                 Zoom = 4.0f
             };
 
-            Floor f1 = new Floor(10, 10);   // Skapar temporär våning för att testa saker
-            foreach (Square sq in f1.Map)
-            {
-                toRender.Add(sq);   // Lägger till alla Squares på våningen i en lista för rendering
-            }
+            map = new Map();
+            Floor f1 = new Floor(1000, 1000);   // Skapar temporär våning för att testa saker
+            map.floors.Add(f1);
+            mapTexture = CompileStaticMap(f1.Map);
 
             CursorVisible = true;   // Rätt så självbeskrivande, gör muspekaren synlig
             program = CompileShaders(); // En funktion som jag kopierade från en tutorial, kompilerar två shaders och länkar dem till ett program och returnerar sedan det.
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);    // Är ej säker, gissar på att den sätter polygoner till att vara tvåsidiga och att de ska vara ifyllda
             GL.PatchParameter(PatchParameterInt.PatchVertices, 3);  // Har ingen aning
             Closed += OnClosed;     // Lägger till OnClosed att anropas då fönstret stängs
+        }
+
+        private int CompileStaticMap(Square[,] squares)
+        {
+            Bitmap map = new Bitmap(squares.GetLength(0) * 16, squares.GetLength(1) * 16);
+            Graphics g = Graphics.FromImage(map);
+            g.FillRectangle(Brushes.Black, new Rectangle(0, 0, map.Width, map.Height));
+            foreach (Square sq in squares)
+            {
+                switch (sq.TileType)
+                {
+                    case StaticTileType.Wall:
+                        g.DrawImage(wallTile, new Point((int)sq.Position.X * 16, (int)sq.Position.Y * 16));
+                        break;
+                    case StaticTileType.Floor:
+                        g.DrawImage(floorTile, new Point((int) sq.Position.X * 16, (int) sq.Position.Y * 16));
+                        break;
+                    case StaticTileType.Empty:
+                    default:
+                        break;
+                }
+            }
+
+            GL.GenTextures(1, out int mapTexture);
+
+            BitmapData bmpData = map.LockBits(new Rectangle(0, 0, map.Width, map.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+
+            GL.BindTexture(TextureTarget.Texture2D, mapTexture);
+
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb, map.Width, map.Height, 0, OpenTK.Graphics.OpenGL4.PixelFormat.Rgb, PixelType.UnsignedByte, bmpData.Scan0);
+            map.UnlockBits(bmpData);
+
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+
+            RenderObject obj = new RenderObject(new Vertex[6]
+            {
+                new Vertex(new Vector4(-0.5f, 0.5f, 0, 1), new Vector2(0, 1)),
+                new Vertex(new Vector4(0.5f, 0.5f, 0, 1), new Vector2(1, 1)),
+                new Vertex(new Vector4(-0.5f, -0.5f, 0, 1), new Vector2(0, 0)),
+                new Vertex(new Vector4(0.5f, 0.5f, 0, 1), new Vector2(1, 1)),
+                new Vertex(new Vector4(0.5f, -0.5f, 0, 1), new Vector2(1, 0)),
+                new Vertex(new Vector4(-0.5f, -0.5f, 0, 1), new Vector2(0, 0))
+            }, program);
+            toRender.Add(obj);
+
+            return mapTexture;
         }
 
         private void OnClosed(object sender, EventArgs e)
@@ -67,7 +126,6 @@ namespace OpenTKGame.Components
         {
             HandleKeyboard();
         }
-
         // Hanterar tangentbordet
         private void HandleKeyboard()
         {
@@ -127,10 +185,7 @@ namespace OpenTKGame.Components
         // Rensar Square-arnas renderingsobjekt från minnet
         public override void Exit()
         {
-            foreach (Square r in toRender)
-            {
-                r.Dispose();
-            }
+
             GL.DeleteProgram(program);
             base.Exit();
         }
@@ -151,11 +206,14 @@ namespace OpenTKGame.Components
             
             GL.UseProgram(program);     // Ej heller säker på denna, tror den säger till OpenGL att det är detta program som ska användas vid rendering
 
-            foreach (Square ro in toRender)
+            //GL.ActiveTexture(TextureUnit.Texture0);
+            //GL.BindTexture(TextureTarget.Texture2D, mapTexture);
+
+            foreach (Floor f in map.floors)
             {
-                ro.Render(camera);  // Renderar alla Squares med informationen i kamera-objektet till en buffer.
+                f.Render(camera, program);
             }
-            
+
             SwapBuffers();  // Byter skärmen och buffern, ritar ut på skärmen.
         }
 

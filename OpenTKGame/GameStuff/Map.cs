@@ -8,5 +8,6 @@ namespace OpenTKGame.GameStuff
 {
     class Map
     {
+        public List<Floor> floors = new List<Floor>();
     }
 }

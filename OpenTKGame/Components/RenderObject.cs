@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL4;
+using OpenTKGame.GameStuff;
 
 namespace OpenTKGame.Components
 {
@@ -16,7 +17,7 @@ namespace OpenTKGame.Components
         private readonly int buffer;
         private readonly int verticeCount;
 
-        public RenderObject(Vertex[] vertices)
+        public RenderObject(Vertex[] vertices, int program)
         {
             verticeCount = vertices.Length;
 
@@ -34,7 +35,8 @@ namespace OpenTKGame.Components
 
             GL.VertexArrayAttribBinding(vertexArray, 2, 0);
             GL.EnableVertexArrayAttrib(vertexArray, 2);
-            GL.VertexArrayAttribFormat(vertexArray, 2, 4, VertexAttribType.Float, false, 16);
+            GL.VertexArrayAttribFormat(vertexArray, 2, 2, VertexAttribType.Float, false, 16);
+
 
             GL.VertexArrayVertexBuffer(vertexArray, 0, buffer, IntPtr.Zero, Vertex.Size);
             initialized = true;

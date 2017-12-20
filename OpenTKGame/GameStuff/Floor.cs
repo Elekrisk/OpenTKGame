@@ -13,32 +13,51 @@ namespace OpenTKGame.GameStuff
     class Floor
     {
         public Square[,] Map { get; set; }
+        private RenderObject renderObject = new RenderObject(new Vertex[0], 0);
+        public Vector2 Size { get; set; }
 
         public Floor(int width, int height)
         {
-            Map = new Square[10, 10];
+            Size = new Vector2(width, height);
+            Map = new Square[width, height];
             Generate(width, height);
         }
 
         private void Generate(int width, int height)
         {
+            Random r = new Random();
+
             for (int i = 0; i < width; i++)
             {
                 for (int j = 0; j < width; j++)
                 {
-                    Color4 color;
-                    if ((j % 2 + i) % 2 == 0)
+                    StaticTileType tileType;
+                    if (r.Next(100) > 20)
                     {
-                        color = Color4.White;
+                        tileType = StaticTileType.Floor;
                     }
                     else
                     {
-                        color = Color4.Gray;
+                        tileType = StaticTileType.Wall;
                     }
-
-                    Map[i, j] = new Square(new Vector3(i, j, 0), color);
+                    Map[i, j] = new Square(new Vector3(i, j, 0), tileType);
                 }
             }
+        }
+
+        public void Render(Camera cam, int program)
+        {
+            renderObject.Dispose();
+            renderObject = new RenderObject(new Vertex[6]
+                {
+                    new Vertex(cam.WorldToScreenSpace(new Vector4(-Size.X/2, Size.Y/2, 0, 1)), new Vector2(0, 1)),
+                    new Vertex(cam.WorldToScreenSpace(new Vector4(Size.X/2, Size.Y/2, 0, 1)), new Vector2(1, 1)),
+                    new Vertex(cam.WorldToScreenSpace(new Vector4(-Size.X/2, -Size.Y/2, 0, 1)), new Vector2(0, 0)),
+                    new Vertex(cam.WorldToScreenSpace(new Vector4(Size.X/2, Size.Y/2, 0, 1)), new Vector2(1, 1)),
+                    new Vertex(cam.WorldToScreenSpace(new Vector4(Size.X/2, -Size.Y/2, 0, 1)), new Vector2(1, 0)),
+                    new Vertex(cam.WorldToScreenSpace(new Vector4(-Size.X/2, -Size.Y/2, 0, 1)), new Vector2(0, 0))
+                }, program);
+            renderObject.Render();
         }
     }
 }
